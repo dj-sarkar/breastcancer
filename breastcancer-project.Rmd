@@ -2,7 +2,10 @@
 title: "Breast Cancer Predictor"
 author: "Dibyajyoti Sarkar"
 date: "6/8/2019"
-output: pdf_document
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, echo = FALSE, include=FALSE}
@@ -87,7 +90,8 @@ library(corrplot)
 
 # The data file will be loaded from my personal github account
 #data <- read.csv("breastcancer.csv") 
-data <- read.csv("https://raw.githubusercontent.com/dj-sarkar/breastcancer/master/breastcancer.csv")
+data <- 
+  read.csv("https://raw.githubusercontent.com/dj-sarkar/breastcancer/master/breastcancer.csv")
 
 ```
 
@@ -117,7 +121,7 @@ The column 33 is invalid.
 
 ```{r echo = TRUE}
 data$diagnosis <- as.factor(data$diagnosis)
-# the 33 column is invalid
+# The 33rd column is invalid
 data[,33] <- NULL
 ```
 
@@ -149,6 +153,7 @@ map(data, function(.x) sum(is.na(.x)))
 There aren't NA values. By analysing the dataset, it is found that it is a bit unbalanced in its proportions:
 
 ```{r echo = TRUE}
+# Check data proportions
 prop.table(table(data$diagnosis))
 ```
 
@@ -199,10 +204,9 @@ ncol(data2)
 The new dataset has loss 10 variables.
 
 
+## Modeling Approach
 
-## Modelling Approach
-
-### Modelling
+### Modeling
 
 Principal Component Analysis (PCA).
 
@@ -211,8 +215,9 @@ One of the common problems in analysis of complex data comes from a large number
 The main idea of PCA is to reduce the dimensionality of a data set consisting of many variables correlated with each other, either heavily or lightly, while retaining the variation present in the dataset, up to the maximum extent. The same is done by transforming the variables to a new set of variables, which are known as the principal components (or simply, the PCs) and are orthogonal, ordered such that the retention of variation present in the original variables decrease as one moves down in the order.
 
 ```{r echo = TRUE}
+# Plot of PCA
 pca_res_data1 <- prcomp(data[,3:ncol(data)], center = TRUE, scale = TRUE)
-plot(pca_res_data1, type="l", main = "PCA Dataset 1")
+plot(pca_res_data1, type="l", main = "PCA")
 ```
 
 ```{r echo = TRUE}
@@ -222,8 +227,9 @@ summary(pca_res_data1)
 It can be observed from the above table that the two first components explains the 0.6324 of the variance. One needs 10 principal components to explain more than 0.95 of the variance and 17 to explain more than 0.99.
 
 ```{r echo = TRUE}
+# Plot of PCA
 pca_res_data2 <- prcomp(data2[,3:ncol(data2)], center = TRUE, scale = TRUE)
-plot(pca_res_data2, type="l",, main = "PCA Dataset 2")
+plot(pca_res_data2, type="l", main = "PCA")
 ```
 
 ```{r echo = TRUE}
@@ -234,6 +240,7 @@ The above table shows that 95% of the variance is explained with 8 PC's in the t
 data2.
 
 ```{r echo = TRUE}
+# Plot of Diagnosis
 pca_df <- as.data.frame(pca_res_data2$x)
 ggplot(pca_df, 
        aes(x=PC1, y=PC2, col=data$diagnosis)) + geom_point(alpha=0.5) + 
@@ -243,6 +250,7 @@ ggplot(pca_df,
 The data of the first 2 components can be easly separated into two classes. This is caused by the fact that the variance explained by these components is not large. The data can be easly separated.
 
 ```{r echo = TRUE}
+# Compare plot of Diagnosis
 g_pc1 <- ggplot(pca_df, aes(x=PC1, fill=data$diagnosis)) + 
   geom_density(alpha=0.25)
 g_pc2 <- ggplot(pca_df, aes(x=PC2, fill=data$diagnosis)) + 
@@ -259,13 +267,14 @@ Another approach is to use the Linear Discriminant Analysis (LDA) instead of PCA
 lda_res_data <- MASS::lda(diagnosis~., data = data, center = TRUE, scale = TRUE) 
 lda_res_data
 
-#Data frame of the LDA for visualization purposes
+# Data frame of the LDA for visualization purposes
 lda_df_predict <- predict(lda_res_data, data)$x %>% as.data.frame() %>% cbind(diagnosis=data$diagnosis)
 ```
 
 ```{r echo = TRUE}
 # LDA Plot
-ggplot(lda_df_predict, aes(x=LD1, fill=diagnosis)) + geom_density(alpha=0.5)  
+ggplot(lda_df_predict, aes(x=LD1, fill=diagnosis)) + geom_density(alpha=0.5) +
+  xlab("LD1") + ylab("Density") + labs(fill = "Diagnosis")
 ```
 
 
@@ -274,6 +283,7 @@ ggplot(lda_df_predict, aes(x=LD1, fill=diagnosis)) + geom_density(alpha=0.5)
 It is necessary to have a training and a testing set when building some models. One can split the modified dataset into Train (80%) and Test (20%), in order to predict is whether a cancer cell is Benign or Malignant, by building machine learning classification models.
 
 ```{r echo = TRUE}
+# Preparing Train and Test datasets
 set.seed(1815)
 data3 <- cbind (diagnosis=data$diagnosis, data2)
 data_sampling_index <- createDataPartition(data$diagnosis, 
@@ -281,10 +291,9 @@ data_sampling_index <- createDataPartition(data$diagnosis,
 train_data <- data3[data_sampling_index, ]
 test_data <- data3[-data_sampling_index, ]
 
-
-fitControl <- trainControl(method="cv",    
-                   #Control the computational nuances of the train function
-    number = 15,   #Either the number of folds or number of resampling iterations
+# Control the computational nuances, number of folds or 
+# number of resampling iterations of the train function
+fitControl <- trainControl(method="cv", number = 15,
                            classProbs = TRUE,
                            summaryFunction = twoClassSummary)
 ```
@@ -295,6 +304,7 @@ fitControl <- trainControl(method="cv",
 The Naive Bayesian classifier is based on Bayes’ theorem with the independence assumptions between predictors. A Naive Bayesian model is easy to build, with no complicated iterative parameter estimation which makes it particularly useful for very large datasets. Bayes theorem provides a way of calculating the posterior probability, P(c|x), from P(c), P(x), and P(x|c). Naive Bayes classifier assume that the effect of the value of a predictor (x) on a given class (c) is independent of the values of other predictors. This assumption is called class conditional independence.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Confusion Matrix
 model_naiveb <- train(diagnosis~.,
                       train_data,
                       method="nb",
@@ -304,6 +314,7 @@ model_naiveb <- train(diagnosis~.,
                       trace=FALSE,
                       trControl=fitControl)
 
+# Check Results
 prediction_naiveb <- predict(model_naiveb, test_data)
 confusionmatrix_naiveb <- confusionMatrix(prediction_naiveb, 
                                           test_data$diagnosis, positive = "M")
@@ -321,6 +332,7 @@ Precision: the number of correct positive results divided by the number of all p
 The most important variables that permit the best prediction and contribute the most to the model are the following:
 
 ```{r echo = TRUE}
+# Plot of Naive Bayes
 plot(varImp(model_naiveb), top=10, main="Top Variables- Naive Bayes")
 ```
 
@@ -330,15 +342,15 @@ plot(varImp(model_naiveb), top=10, main="Top Variables- Naive Bayes")
 Logistic Regression is widly used for binary classification like (0,1). The binary logistic model is used to estimate the probability of a binary response based on one or more predictor (or independent) variables (features).
 
 ```{r,  echo = TRUE, warning = FALSE, message = FALSE}
+# Confusion Matrix
 model_logreg<- train(diagnosis ~., data = train_data, method = "glm",
                      metric = "ROC",
-                     
                      preProcess = c("scale", "center"),  
                      # in order to normalize the data
                      trControl= fitControl)
 prediction_logreg<- predict(model_logreg, test_data)
 
-# Check results
+# Check Results
 confusionmatrix_logreg <- confusionMatrix(prediction_logreg, 
                                           test_data$diagnosis, positive = "M")
 confusionmatrix_logreg
@@ -348,6 +360,7 @@ confusionmatrix_logreg
 The most important variables that permit the best prediction and contribute the most to the model are the following:
 
 ```{r echo = TRUE}
+# Plot of Log Regression
 plot(varImp(model_logreg), top=10, main="Top Lariables - Log Regression")
 ```
 
@@ -361,6 +374,7 @@ Random Forest is a supervised learning algorithm and it is flexible, easy to use
 Random forest builds multiple decision trees and merges them together to get a more accurate and stable prediction.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Confusion Matrix
 model_randomforest <- train(diagnosis~.,
                             train_data,
                             method="rf",  #also recommended ranger, 
@@ -373,13 +387,14 @@ model_randomforest <- train(diagnosis~.,
 
 prediction_randomforest <- predict(model_randomforest, test_data)
 
-#Check results
+# Check Results
 confusionmatrix_randomforest <- confusionMatrix(
   prediction_randomforest, test_data$diagnosis, positive = "M")
 confusionmatrix_randomforest
 ```
 
 ```{r echo = TRUE}
+# Plot of Random Forest
 plot(varImp(model_randomforest), top=10, main="Top Variables- Random Forest")
 ```
 
@@ -389,15 +404,19 @@ plot(varImp(model_randomforest), top=10, main="Top Variables- Random Forest")
 KNN (K-Nearest Neighbors) is one of many (supervised learning) algorithms used in data mining and machine learning, it’s a classifier algorithm where the learning is based “how similar” is a data from other. K nearest neighbors is a simple algorithm that stores all available cases and classifies new cases based on a similarity measure (e.g., distance functions).
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Confusion Matrix
 model_knn <- train(diagnosis~.,
                    train_data,
                    method="knn",
                    metric="ROC",
                    preProcess = c('center', 'scale'),
-                   tuneLength=10, #The tuneLength parameter tells the algorithm to try different default values for the main parameter
-                   #In this case 10 default values are used
+                   tuneLength=10, 
+                   #The tuneLength parameter 
+    #tells the algorithm to try different default v
+    #alues for the main parameter, in this case 10 default values are used
                    trControl=fitControl)
 
+# Check Results
 prediction_knn <- predict(model_knn, test_data)
 confusionmatrix_knn <- confusionMatrix(prediction_knn, 
                                        test_data$diagnosis, positive = "M")
@@ -407,6 +426,7 @@ confusionmatrix_knn
 The most important variables that permit the best prediction and contribute the most to the model are the following:
 
 ```{r echo = TRUE}
+# Plot of KNN
 plot(varImp(model_knn), top=10, main="Top Variables - KNN")
 ```
 
@@ -419,6 +439,7 @@ An artificial Neural Network consists of nodes (called neurons) and edges (calle
 Neural Networks take in the weights of connections between neurons . The weights are balanced, learning data point in the wake of learning data point . When all weights are trained, the neural network can be utilized to predict the class or a quantity, if there should arise an occurrence of regression of a new input data point. With Neural networks, extremely complex models can be trained and they can be utilized as a kind of black box, without playing out an unpredictable complex feature engineering before training the model. Joined with the “deep approach” even more unpredictable models can be picked up to realize new possibilities. 
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Confusion Matrix
 model_nnet_pca <- train(diagnosis~.,
                         train_data,
                         method="nnet",
@@ -428,6 +449,7 @@ model_nnet_pca <- train(diagnosis~.,
                         trace=FALSE,
                         trControl=fitControl)
 
+# Check Results
 prediction_nnet_pca <- predict(model_nnet_pca, test_data)
 confusionmatrix_nnet_pca <- confusionMatrix(prediction_nnet_pca, 
                                             test_data$diagnosis, positive = "M")
@@ -438,6 +460,7 @@ confusionmatrix_nnet_pca
 The most important variables that permit the best prediction and contribute the most to the model are the following:
 
 ```{r echo = TRUE}
+# Plot of NNET PCA
 plot(varImp(model_nnet_pca), top=8, main="Top Variables - NNET PCA")
 ```
 
@@ -448,11 +471,13 @@ plot(varImp(model_nnet_pca), top=8, main="Top Variables - NNET PCA")
 Create a training and a test set of LDA data created in previous section:
 
 ```{r echo = TRUE}
+# Preparing Train and Test datasets
 train_data_lda <- lda_df_predict[data_sampling_index, ]
 test_data_lda <- lda_df_predict[-data_sampling_index, ]
 ```
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Confusion Matrix
 model_nnet_lda <- train(diagnosis~.,
                         train_data_lda,
                         method="nnet",
@@ -462,6 +487,7 @@ model_nnet_lda <- train(diagnosis~.,
                         trace=FALSE,
                         trControl=fitControl)
 
+# Check Results
 prediction_nnet_lda <- predict(model_nnet_lda, test_data_lda)
 confusionmatrix_nnet_lda <- confusionMatrix(
   prediction_nnet_lda, test_data_lda$diagnosis, positive = "M")
@@ -473,6 +499,7 @@ confusionmatrix_nnet_lda
 One can now compare and evaluate the results obtained with the above calculations.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Gather all model results
 models_list <- list(Naive_Bayes=model_naiveb, 
                     Logistic_regr=model_logreg,
                     Random_Forest=model_randomforest,
@@ -487,12 +514,14 @@ summary(models_results)
 From the following plot, one can observe two models, Naive_bayes and Logistic_regr have great variability, depending of the processed sample :
 
 ```{r echo = TRUE}
+# Plot of Results
 bwplot(models_results, metric="ROC")
 ```
 
 The Neural Network LDA model achieve a great auc (Area Under the ROC Curve) with some variability. The ROC (Receiver Operating characteristic Curve is a graph showing the performance of a classification model at all classification thresholds) metric measure the auc of the roc curve of each model. This metric is independent of any threshold. Let’s remember how these models result with the testing dataset. Prediction classes are obtained by default with a threshold of 0.5 which could not be the best with an unbalanced dataset like this.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Gather Confusion Matrix results
 confusionmatrix_list <- list(
   Naive_Bayes=confusionmatrix_naiveb, 
   Logistic_regr=confusionmatrix_logreg,
@@ -521,6 +550,7 @@ The best results for sensitivity (detection of breast cancer malign cases) is Ne
 
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
+# Identify best result for each matrix
 confusionmatrix_results_max <- apply(confusionmatrix_list_results, 1, which.is.max)
 
 output_report <- data.frame(metric=names(confusionmatrix_results_max), 

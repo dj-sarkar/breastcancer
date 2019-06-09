@@ -1,3 +1,9 @@
+## Dibyajyoti Sarkar
+## Breast Cancer Project
+## HarvardX: PH125.9x - Capstone Project
+## https://github.com/dj-sarkar/movielens
+
+
 # Check all necessary libraries
 
 if(!require(dplyr)) install.packages("dplyr", repos = "http://cran.us.r-project.org")
@@ -20,36 +26,26 @@ library(funModeling)
 library(corrplot)
 
 
-#################################################
-#  Breast Cancer Project Code e
-################################################
-
-#### Data Loading ####
-# Wisconsin Breast Cancer Diagnostic Dataset
-# https://www.kaggle.com/uciml/breast-cancer-wisconsin-data/version/2
-
 # Loading the csv data file from my github account
-
 data <- data <- read.csv("https://raw.githubusercontent.com/dj-sarkar/breastcancer/master/breastcancer.csv")
 
 data$diagnosis <- as.factor(data$diagnosis)
+
 
 # The 33rd column is not right
 data[,33] <- NULL
 
 
 # General Data Info
-
 str(data)
 summary(data)
 
-## We have 569 observations with 32 variables. 
+## There are 569 observations with 32 variables. 
 head(data)
 
 # Check for missing values
-
 map_int(data, function(.x) sum(is.na(.x)))
-## no missing values
+## No missing values
 
 # Check proporton of data
 prop.table(table(data$diagnosis))
@@ -231,7 +227,7 @@ plot(varImp(model_nnet_pca), top=8, main="Top variables - NNET PCA")
 train_data_lda <- lda_df_predict[data_sampling_index, ]
 test_data_lda <- lda_df_predict[-data_sampling_index, ]
 
-# Creation of Neural Network with LDA Mode
+# Creation of Neural Network with LDA Model
 model_nnet_lda <- train(diagnosis~.,
                         train_data_lda,
                         method="nnet",
@@ -286,7 +282,3 @@ output_report <- data.frame(metric=names(confusionmatrix_results_max),
 rownames(output_report) <- NULL
 output_report
 
-# Appendix - Enviroment
-# Print system information
-print("Operating System:")
-version
