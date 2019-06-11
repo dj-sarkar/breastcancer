@@ -1,5 +1,5 @@
 ## Dibyajyoti Sarkar
-## Breast Cancer Project
+## Breast Cancer Prediction Project
 ## HarvardX: PH125.9x - Capstone Project
 ## https://github.com/dj-sarkar/movielens
 

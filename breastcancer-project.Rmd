@@ -1,5 +1,5 @@
 ---
-title: "Breast Cancer Predictor"
+title: "Breast Cancer Prediction Project"
 author: "Dibyajyoti Sarkar"
 date: "6/8/2019"
 output:
@@ -278,7 +278,7 @@ ggplot(lda_df_predict, aes(x=LD1, fill=diagnosis)) + geom_density(alpha=0.5) +
 ```
 
 
-### Model Creation
+### Data Preparation
 
 It is necessary to have a training and a testing set when building some models. One can split the modified dataset into Train (80%) and Test (20%), in order to predict is whether a cancer cell is Benign or Malignant, by building machine learning classification models.
 
@@ -521,7 +521,7 @@ bwplot(models_results, metric="ROC")
 The Neural Network LDA model achieve a great auc (Area Under the ROC Curve) with some variability. The ROC (Receiver Operating characteristic Curve is a graph showing the performance of a classification model at all classification thresholds) metric measure the auc of the roc curve of each model. This metric is independent of any threshold. Let’s remember how these models result with the testing dataset. Prediction classes are obtained by default with a threshold of 0.5 which could not be the best with an unbalanced dataset like this.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
-# Gather Confusion Matrix results
+# Confusion Matrix results of all models
 confusionmatrix_list <- list(
   Naive_Bayes=confusionmatrix_naiveb, 
   Logistic_regr=confusionmatrix_logreg,
@@ -546,7 +546,7 @@ Recall (Sensitivity) is the number of True Positives divided by the number of Tr
 
 The F1 Score is the 2 x ((precision x recall) / (precision + recall)). It is also called the F Score or the F Measure. Put another way, the F1 score conveys the balance between the precision and the recall.
 
-The best results for sensitivity (detection of breast cancer malign cases) is Neural Netword with LDA model which also has a great F1 score.
+The best results for sensitivity (detection of breast cancer malign cases) is Neural Network with LDA model which also has a great F1 score.
 
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
@@ -566,7 +566,7 @@ output_report
 
 # Conclusion
 
-This paper treats the Wisconsin Madison Breast Cancer diagnosis problem as a pattern classification problem. In this report several machine learning model were investigated and the optimal model was selected by choosing a high accuracy level combinated with a low rate of false-negatives (the means that the metric is high sensitivity).
+This paper treats the Wisconsin Madison Breast Cancer diagnosis problem as a pattern classification problem. In this report several machine learning models were investigated and the optimal model was selected by choosing a high accuracy level combinated with a low rate of false-negatives (the means that the metric is high sensitivity).
 
-The Neural Netword with LDA model has the optimal results for F1 (0.9879518), Sensitivity (0.9761905) and Balanced Accuracy (0.9880952)
+The Neural Network with LDA model has the optimal results for F1 (0.9879518), Sensitivity (0.9761905) and Balanced Accuracy (0.9880952)
 
